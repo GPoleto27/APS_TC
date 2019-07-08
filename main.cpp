@@ -2,9 +2,9 @@
 
 int main() {
 	register int i, j, k;
-	int nEstados, nElementos, nFinais, nTransicoes, nPalavras;
+	int nEstados, nElementos, nFinais, nTransicoes, nPalavras, nEstadosEquivalentes = 0;
 	char palavra[16], c;
-	bool eFinal, flag;
+	bool flag;
 	int *finais, *naoFinais;
 	vector<char> alfabeto;
 	bool *estadosAcessiveis;
@@ -72,13 +72,13 @@ int main() {
 			cout << "Aceita.\n";
 		else cout << "Rejeita.\n";
 	}
-	
+
 	// Parte 2
 	// Verifica se a função programa é total
 	estado* aux;
 	vector<char> auxAlfa = alfabeto;		// Alfabeto auxiliar (para verificar se todos os elementos possuem no mínimo uma transição)
-	for (j = 0; j < nEstados; j++) {						// Passar pelos estados		
-		aux = automato[i];									// Auxiliar para caminhar pelos estados
+	for (j = 0; j < nEstados; j++) {						// Passar pelos estados
+		aux = automato[j];									// Auxiliar para caminhar pelos estados
 		for(i = 0; i < auxAlfa.size(); i++) {				// Todo o alfabeto a ser verificado
 			if(aux->transicoes[ auxAlfa[i] ] != NULL) {		// Se existe uma transição para aquele elemento
 				auxAlfa.erase(auxAlfa.begin()+(i--));		// Remove o elemento, pois já foi encontrada uma transição para ele
@@ -123,6 +123,7 @@ int main() {
 				if( automato[ finais[i] ]->transicoes[ (int)alfabeto[k] ] == NULL || automato[ finais[j] ]->transicoes[ (int)alfabeto[k] ] == NULL ||
 					!( (automato[ finais[i] ]->transicoes[ (int)alfabeto[k] ]->final &&  automato[ finais[j] ]->transicoes[ (int)alfabeto[k] ]->final) || (!automato[ finais[i] ]->transicoes[ (int)alfabeto[k] ]->final &&  !automato[ finais[j] ]->transicoes[ (int)alfabeto[k] ]->final) ) ) {
 					flag = true;								// Então o par é distinguivel
+					nEstadosEquivalentes--;
 					break;										// Avança, não compara com outros elementos
 				}
 			}
@@ -149,6 +150,7 @@ int main() {
 	for(i = 0; i < nEstados; i++) {
 		for(j = 0; j < nEstados; j++) {
 			if(equivalencia[i][j]) {
+                nEstadosEquivalentes++;
 				cout << i << " e " << j << "\n";				// Imprime os estados equivalentes
 				if (i < j) {									// Se i < j
 					for(k = 0; k < nTransicoes; k++) {			// Altera as ocorrências de j na lista de transições por i
@@ -177,8 +179,12 @@ int main() {
 			}
 		}
 	}
+	if(!nEstadosEquivalentes) {
+		cout << "Esse AFD nao pode ser minimizado pois nao tem estados equivalentes\n";
+		return 12;
+	}
 
-	vector<estado*> minimizado = inicializaEstados(nEstados, finais, nFinais);	// Inicializa o automato minimizado com o mesmo número de estados, porém com a nova lista de finais 
+	vector<estado*> minimizado = inicializaEstados(nEstados, finais, nFinais);	// Inicializa o automato minimizado com o mesmo número de estados, porém com a nova lista de finais
 	populaTransicoes(minimizado, transicoes, nTransicoes);						// Popula as transições com a nova lista de transições
 	minimizado = excluirInuteis(minimizado); 									// Exclui estados sem transições (o que inclui um estado de cada par de estados equivalentes já que um deles são vai ter transições)
 	imprimeFormalizacao(minimizado, alfabeto);									// Imprime a formalização do automato minimizado
